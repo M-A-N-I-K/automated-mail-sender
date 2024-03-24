@@ -1,7 +1,9 @@
 <h1 align="center" id="title">MailEase</h1>
 
 <p align="center"><img src="https://socialify.git.ci/M-A-N-I-K/automated-mail-sender/image?description=1&amp;descriptionEditable=This%20project%20is%20a%20streamlined%20solution%20for%20automating%20email%20communication%2C%20built%20to%20enhance%20efficiency%20in%20handling%20correspondence%20tasks.%20&amp;font=Raleway&amp;language=1&amp;name=1&amp;owner=1&amp;pattern=Circuit%20Board&amp;stargazers=1&amp;theme=Dark" alt="project-image"></p>
+
 ## Overview
+
 <p id="description">This project is a streamlined solution for automating email communication built to enhance efficiency in handling correspondence tasks. Whether it's for business personal or organizational purposes this Automated Mail Sender simplifies the process of sending emails ensuring timely delivery and effective communication.</p>
 
 <p align="center"><img src="https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&amp;logo=typescript&amp;logoColor=white" alt="shields"><img src="https://img.shields.io/badge/Next-black?style=for-the-badge&amp;logo=next.js&amp;logoColor=white" alt="shields"><img src="https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&amp;logo=tailwind-css&amp;logoColor=white" alt="shields"><img src="https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&amp;logo=vercel&amp;logoColor=white" alt="shields"></p>
