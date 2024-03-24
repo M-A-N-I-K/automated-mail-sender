@@ -5,7 +5,6 @@ import { ModeToggle } from "@/components/modeToggle";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/spinner";
 import Link from "next/link";
 
 export const Navbar = () => {

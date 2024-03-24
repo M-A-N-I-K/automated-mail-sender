@@ -30,9 +30,14 @@ const formSchema = z.object({
 	file: z
 		.instanceof(FileList)
 		.refine((file) => file?.length == 1, "File is required."),
+	emailFile: z.instanceof(FileList).optional(),
 });
 
-export default function InputForm() {
+interface InputFormProps {
+	multipleEmails?: boolean;
+}
+
+export default function InputForm({ multipleEmails }: InputFormProps) {
 	const { edgestore } = useEdgeStore();
 
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -49,17 +54,25 @@ export default function InputForm() {
 	});
 
 	const fileRef = form.register("file");
+	const emailFileRef = form.register("emailFile");
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		console.log(values);
 
 		const file = values.file[0];
+		const emailFile = values.emailFile?.[0];
 
 		console.log(file);
 
 		const res = await edgestore.publicFiles.upload({
 			file,
 		});
+		let emailRes;
+		if (emailFile) {
+			emailRes = await edgestore.publicFiles.upload({
+				file: emailFile,
+			});
+		}
 
 		console.log(res);
 
@@ -68,7 +81,11 @@ export default function InputForm() {
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify({ ...values, file: res.url }),
+			body: JSON.stringify({
+				...values,
+				file: res.url,
+				emailFile: emailRes?.url,
+			}),
 		});
 
 		toast.promise(response.json(), {
@@ -84,14 +101,14 @@ export default function InputForm() {
 		<Form {...form}>
 			<form
 				onSubmit={form.handleSubmit(onSubmit)}
-				className="w-full max-w-2xl mt-24 relative z-[99999]"
+				className="w-full max-w-2xl mt-[20rem] sm:mt-40 mb-4 relative z-10"
 			>
 				<div className="flex flex-col sm:flex-row justify-between gap-1 items-center">
 					<FormField
 						control={form.control}
 						name="recipientName"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
 								<FormLabel>Recipient's Name</FormLabel>
 								<FormControl>
 									<Input placeholder="Manik Dingra" {...field} />
@@ -104,7 +121,7 @@ export default function InputForm() {
 						control={form.control}
 						name="recruiterName"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
 								<FormLabel>Recruiter's Name</FormLabel>
 								<FormControl>
 									<Input placeholder="Microsoft's Team" {...field} />
@@ -119,7 +136,7 @@ export default function InputForm() {
 						control={form.control}
 						name="to"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
 								<FormLabel>To</FormLabel>
 								<FormControl>
 									<Input
@@ -135,7 +152,7 @@ export default function InputForm() {
 						control={form.control}
 						name="from"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
 								<FormLabel>From</FormLabel>
 								<FormControl>
 									<Input
@@ -153,7 +170,7 @@ export default function InputForm() {
 						control={form.control}
 						name="password"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
 								<FormLabel>Password</FormLabel>
 								<FormControl>
 									<Input
@@ -171,7 +188,7 @@ export default function InputForm() {
 						control={form.control}
 						name="subject"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
 								<FormLabel>Subject</FormLabel>
 								<FormControl>
 									<Input
@@ -188,7 +205,7 @@ export default function InputForm() {
 					control={form.control}
 					name="file"
 					render={() => (
-						<FormItem className="dark:text-white text-black">
+						<FormItem className="dark:text-white text-black text-xl">
 							<FormLabel>File</FormLabel>
 							<FormControl>
 								<Input type="file" {...fileRef} />
@@ -197,15 +214,30 @@ export default function InputForm() {
 						</FormItem>
 					)}
 				/>
+				{multipleEmails && (
+					<FormField
+						control={form.control}
+						name="emailFile"
+						render={() => (
+							<FormItem className="dark:text-white text-black text-xl">
+								<FormLabel>Upload Email List File</FormLabel>
+								<FormControl>
+									<Input type="file" {...emailFileRef} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				)}
 				<FormField
 					control={form.control}
 					name="content"
 					render={({ field }) => (
-						<FormItem className="dark:text-white text-black">
+						<FormItem className="dark:text-white text-black text-xl">
 							<FormLabel>Content</FormLabel>
 							<FormControl>
 								<Textarea
-									rows={4}
+									rows={3}
 									placeholder="Your email content goes here"
 									{...field}
 								/>
