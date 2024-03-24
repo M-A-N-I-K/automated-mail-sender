@@ -4,10 +4,13 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { MultiStepLoader as Loader } from "@/components/ui/multi-step-loader";
+import { cn } from "@/lib/utils";
 import {
 	Form,
 	FormItem,
@@ -16,8 +19,10 @@ import {
 	FormField,
 	FormControl,
 } from "@/components/ui/form";
-
 import { useEdgeStore } from "@/lib/edgestore";
+
+import { readCsv } from "../_utils/readCSV";
+import { loadingStates } from "../_utils/utilities";
 
 const validExtensions = ["pdf", "doc", "docx"];
 
@@ -29,12 +34,12 @@ const toMb = (bytes: number) => {
 
 const formSchema = z.object({
 	from: z.string().min(1, { message: "Email is required" }).email(),
-	to: z.string().min(1, { message: "Email is required" }).email(),
+	to: z.string().email().optional(),
 	password: z.string().min(1, { message: "Password is required" }),
-	subject: z.string().min(1, { message: "Subject is required" }),
-	content: z.string().min(1, { message: "Message is required" }),
-	recipientName: z.string().min(1, { message: "Recipient Name is required" }),
-	recruiterName: z.string().min(1, { message: "Recruiter Name is required" }),
+	subject: z.string().optional(),
+	content: z.string().optional(),
+	senderName: z.string().min(1, { message: "Sender Name is required" }),
+	recipientName: z.string().optional(),
 	file: z
 		.unknown()
 		.transform((value) => {
@@ -72,6 +77,7 @@ const formSchema = z.object({
 		})
 		.transform((value) => value?.item(0))
 		.optional(),
+	delay: z.number().min(0).max(1000).default(0).optional(),
 });
 
 interface InputFormProps {
@@ -80,17 +86,21 @@ interface InputFormProps {
 
 export default function InputForm({ multipleEmails }: InputFormProps) {
 	const { edgestore } = useEdgeStore();
+	const [loading, setLoading] = useState(false);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			from: "",
 			password: "",
-			to: "",
 			content: "",
+			senderName: "",
 			subject: "",
 			recipientName: "",
-			recruiterName: "",
+			to: "",
+			file: null,
+			emailFile: null,
+			delay: 0,
 		},
 	});
 
@@ -98,6 +108,8 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 	const emailFileRef = form.register("emailFile");
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
+		setLoading(true);
+
 		console.log(values);
 
 		const file = values.file;
@@ -107,7 +119,41 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 
 		if (!file) {
 			toast.error("File is required");
+			setLoading(false);
 			return;
+		}
+
+		const validations = {
+			emailFile: {
+				condition: !emailFile && multipleEmails,
+				errorMessage: "Email file is required",
+			},
+			content: {
+				condition: !multipleEmails && !values.content,
+				errorMessage: "Content is required",
+			},
+			recipientName: {
+				condition: !multipleEmails && !values.recipientName,
+				errorMessage: "Recipient Name is required",
+			},
+			subject: {
+				condition: !multipleEmails && !values.subject,
+				errorMessage: "Subject is required",
+			},
+			to: {
+				condition: !multipleEmails && !values.to,
+				errorMessage: "To is required",
+			},
+		};
+
+		for (const [key, { condition, errorMessage }] of Object.entries(
+			validations
+		)) {
+			if (condition) {
+				toast.error(errorMessage);
+				setLoading(false);
+				return;
+			}
 		}
 
 		const res = await edgestore.publicFiles.upload({
@@ -117,9 +163,8 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 		let emailRes;
 
 		if (emailFile) {
-			emailRes = await edgestore.publicFiles.upload({
-				file: emailFile,
-			});
+			emailRes = await readCsv(emailFile);
+			console.log("emailRes", emailRes);
 		}
 
 		console.log(res);
@@ -132,9 +177,11 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 			body: JSON.stringify({
 				...values,
 				file: res.url,
-				emailFile: emailRes?.url,
+				emailFile: emailRes,
 			}),
 		});
+
+		setLoading(false);
 
 		toast.promise(response.json(), {
 			loading: "Sending email...",
@@ -147,17 +194,31 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 
 	return (
 		<Form {...form}>
+			<Loader
+				loadingStates={loadingStates}
+				loading={loading}
+				duration={3000}
+			/>
 			<form
 				onSubmit={form.handleSubmit(onSubmit)}
-				className="w-full max-w-2xl mt-[20rem] sm:mt-40 mb-4 relative z-10"
+				className="w-full max-w-2xl mt-[22rem] sm:mt-40 mb-4 relative z-10"
 			>
-				<div className="flex flex-col sm:flex-row justify-between gap-1 items-center">
+				<div
+					className={cn(
+						"flex flex-col sm:flex-row justify-between gap-1 items-center"
+					)}
+				>
 					<FormField
 						control={form.control}
-						name="recipientName"
+						name="senderName"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
-								<FormLabel>Recipient&apos;s Name</FormLabel>
+							<FormItem
+								className={cn(
+									"w-full dark:text-white text-black text-xl",
+									!multipleEmails && "sm:w-1/2"
+								)}
+							>
+								<FormLabel>Sender&apos;s Name</FormLabel>
 								<FormControl>
 									<Input placeholder="Manik Dingra" {...field} />
 								</FormControl>
@@ -165,42 +226,51 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 							</FormItem>
 						)}
 					/>
-					<FormField
-						control={form.control}
-						name="recruiterName"
-						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
-								<FormLabel>Recruiter&apos;s Name</FormLabel>
-								<FormControl>
-									<Input placeholder="Microsoft's Team" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+					{!multipleEmails && (
+						<FormField
+							control={form.control}
+							name="recipientName"
+							render={({ field }) => (
+								<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
+									<FormLabel>Recipient&apos;s Name</FormLabel>
+									<FormControl>
+										<Input placeholder="Microsoft Corp" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					)}
 				</div>
 				<div className="flex flex-col sm:flex-row justify-between gap-1 items-center">
-					<FormField
-						control={form.control}
-						name="to"
-						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
-								<FormLabel>To</FormLabel>
-								<FormControl>
-									<Input
-										placeholder="recruiter-email@gmail.com"
-										{...field}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+					{!multipleEmails && (
+						<FormField
+							control={form.control}
+							name="to"
+							render={({ field }) => (
+								<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
+									<FormLabel>To</FormLabel>
+									<FormControl>
+										<Input
+											placeholder="recruiter-email@gmail.com"
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					)}
 					<FormField
 						control={form.control}
 						name="from"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
+							<FormItem
+								className={cn(
+									"w-full dark:text-white text-black text-xl",
+									!multipleEmails && "sm:w-1/2"
+								)}
+							>
 								<FormLabel>From</FormLabel>
 								<FormControl>
 									<Input
@@ -218,7 +288,12 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 						control={form.control}
 						name="password"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
+							<FormItem
+								className={cn(
+									"w-full dark:text-white text-black text-xl",
+									!multipleEmails && "sm:w-1/2"
+								)}
+							>
 								<FormLabel>Password</FormLabel>
 								<FormControl>
 									<Input
@@ -231,23 +306,24 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 							</FormItem>
 						)}
 					/>
-
-					<FormField
-						control={form.control}
-						name="subject"
-						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
-								<FormLabel>Subject</FormLabel>
-								<FormControl>
-									<Input
-										placeholder="Ex : Application for full stack developer role"
-										{...field}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+					{!multipleEmails && (
+						<FormField
+							control={form.control}
+							name="subject"
+							render={({ field }) => (
+								<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
+									<FormLabel>Subject</FormLabel>
+									<FormControl>
+										<Input
+											placeholder="Ex : Application for full stack developer role"
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					)}
 				</div>
 				<FormField
 					control={form.control}
@@ -277,23 +353,43 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 						)}
 					/>
 				)}
-				<FormField
-					control={form.control}
-					name="content"
-					render={({ field }) => (
-						<FormItem className="dark:text-white text-black text-xl">
-							<FormLabel>Content</FormLabel>
-							<FormControl>
-								<Textarea
-									rows={3}
-									placeholder="Your email content goes here"
-									{...field}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+				{!multipleEmails ? (
+					<FormField
+						control={form.control}
+						name="content"
+						render={({ field }) => (
+							<FormItem className="dark:text-white text-black text-xl">
+								<FormLabel>Content</FormLabel>
+								<FormControl>
+									<Textarea
+										rows={3}
+										placeholder="Your email content goes here"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				) : (
+					<FormField
+						control={form.control}
+						name="delay"
+						render={({ field }) => (
+							<FormItem className="dark:text-white text-black text-xl">
+								<FormLabel>Content</FormLabel>
+								<FormControl>
+									<Input
+										type="number"
+										placeholder="Delay (in seconds)"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				)}
 				<Button className="mt-4 w-full" type="submit">
 					Submit
 				</Button>

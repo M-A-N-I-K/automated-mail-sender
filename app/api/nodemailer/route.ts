@@ -1,26 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
-import XLSX from "xlsx";
-import axios from "axios";
+import { delay } from "@/app/(form)/_utils/readCSV";
 
-const csvParse = require("csv-parse").parse;
 const nodemailer = require("nodemailer");
-
-// Parse CSV file
-function parseCSV(filePath: string) {
-	console.log("Parsing CSV file");
-	const fileContent = fs.readFileSync(filePath, "utf8");
-	const records = csvParse(fileContent, { columns: true });
-	return records;
-}
-
-// Parse Excel file
-function parseExcel(filePath: Buffer) {
-	const workbook = XLSX.read(filePath, { type: "buffer" });
-	const sheetName = workbook.SheetNames[0];
-	const sheet = workbook.Sheets[sheetName];
-	return XLSX.utils.sheet_to_json(sheet, { header: 1 });
-}
 
 export async function POST(req: NextRequest) {
 	const data = await req.json();
@@ -28,41 +10,25 @@ export async function POST(req: NextRequest) {
 	console.log(data);
 
 	const htmlTemplate = fs.readFileSync("public/email_template.html", "utf8");
-	const htmlContent = htmlTemplate
-		.replace("{{recipientName}}", data.recipientName)
-		.replace("{{recruiterName}}", data.recruiterName)
+	let htmlContent = htmlTemplate
+		.replace("{{senderName}}", data.senderName)
 		.replace("{{content}}", data.content.replace(/\n/g, "<br>"));
 
+	if (data.senderName) {
+		htmlContent = htmlContent.replace(
+			"{{recipientName}}",
+			data.recipientName
+		);
+	}
+
 	const transporter = nodemailer.createTransport({
-		service: "Gmail",
+		service: "gmail",
 		port: 587,
 		auth: {
 			user: data.from,
 			pass: data.password,
 		},
 	});
-
-	if (data.emailFile) {
-		try {
-			// const response = await axios.get(data.emailFile, {
-			// 	responseType: "arraybuffer",
-			// });
-			// const fileContent = Buffer.from(response.data, "binary");
-
-			// console.log("File Content:", fileContent);
-
-			let emailFileData;
-			// if (data.emailFile.endsWith(".xlsx")) {
-			// 	emailFileData = parseExcel(fileContent);
-			// } else if (data.emailFile.endsWith(".csv")) {
-			emailFileData = parseCSV(data.emailFile);
-			// }
-
-			console.log("Email File Data:", emailFileData);
-		} catch (error) {
-			console.error("Error fetching or parsing email file:", error);
-		}
-	}
 
 	const mailOptions = {
 		from: data.from,
@@ -77,7 +43,40 @@ export async function POST(req: NextRequest) {
 		],
 	};
 
-	// const info = await transporter.sendMail(mailOptions);
-	const info = "message sent";
+	let info = [];
+
+	if (data.emailFile && data.emailFile.length > 0) {
+		for (
+			let currentIndex = 0;
+			currentIndex < data.emailFile.length;
+			currentIndex++
+		) {
+			await delay(data.delay * 1000);
+			mailOptions.to = data.emailFile[currentIndex].Email;
+			mailOptions.subject = data.emailFile[currentIndex].Subject;
+			mailOptions.html = htmlTemplate
+				.replace(
+					"{{recipientName}}",
+					data.emailFile[currentIndex].Recipient
+				)
+				.replace("{{senderName}}", data.senderName)
+				.replace(
+					"{{content}}",
+					data.emailFile[currentIndex].Content.replace(/\n/g, "<br>")
+				);
+
+			try {
+				const res = await transporter.sendMail(mailOptions);
+				console.log("Email sent to", mailOptions.to, ":", res.response);
+				info.push(res);
+			} catch (error) {
+				console.error("Error sending email to", mailOptions.to, ":", error);
+				info.push(error);
+			}
+		}
+	} else {
+		info = await transporter.sendMail(mailOptions);
+	}
+
 	return NextResponse.json(info);
 }

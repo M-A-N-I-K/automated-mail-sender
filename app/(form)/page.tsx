@@ -30,7 +30,9 @@ const Hero = () => {
 					EmailEase - Send emails with ease
 				</MotionP>
 				<Link href="/single-email">
-					<HoverBorderGradient>Start Now!</HoverBorderGradient>
+					<HoverBorderGradient>
+						Start Sending Emails Now!
+					</HoverBorderGradient>
 				</Link>
 			</div>
 		</>
