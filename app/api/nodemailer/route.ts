@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
-import { delay } from "@/app/(form)/_utils/readCSV";
+// import { delay } from "@/app/(form)/_utils/readCSV";
 
 const nodemailer = require("nodemailer");
 
@@ -43,6 +43,18 @@ export async function POST(req: NextRequest) {
 		});
 	});
 
+	async function sendMail(mailOptions: any) {
+		return new Promise((resolve, reject) => {
+			transporter.sendMail(mailOptions, function (error: any, info: any) {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(info);
+				}
+			});
+		});
+	}
+
 	const mailOptions = {
 		from: data.from,
 		to: data.to,
@@ -56,15 +68,13 @@ export async function POST(req: NextRequest) {
 		],
 	};
 
-	let result: any[] = [];
-
 	if (data.emailFile && data.emailFile.length > 0) {
 		for (
 			let currentIndex = 0;
 			currentIndex < data.emailFile.length;
 			currentIndex++
 		) {
-			await delay(data.delay * 1000);
+			// await delay(data.delay * 1000);
 			mailOptions.to = data.emailFile[currentIndex].Email;
 			mailOptions.subject = data.emailFile[currentIndex].Subject;
 			mailOptions.html = htmlTemplate
@@ -78,38 +88,11 @@ export async function POST(req: NextRequest) {
 					data.emailFile[currentIndex].Content.replace(/\n/g, "<br>")
 				);
 
-			await new Promise((resolve, reject) => {
-				transporter.sendMail(mailOptions, function (error: any, info: any) {
-					if (error) {
-						reject(error);
-						result.push(error);
-						console.log(error);
-					} else {
-						result.push(info);
-						console.log(
-							"Email sent to",
-							mailOptions.to,
-							":",
-							info.response
-						);
-						resolve(info);
-					}
-				});
-			});
+			await sendMail(mailOptions);
 		}
 	} else {
-		await new Promise((resolve, reject) => {
-			transporter.sendMail(mailOptions, function (error: any, info: any) {
-				if (error) {
-					reject(error);
-					console.log(error);
-				} else {
-					resolve(info);
-					result = info;
-				}
-			});
-		});
+		await sendMail(mailOptions);
 	}
 
-	return NextResponse.json({ status: "success", data: result });
+	return NextResponse.json({ status: "success" });
 }
