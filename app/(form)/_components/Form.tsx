@@ -84,14 +84,14 @@ export default function InputForm() {
 		<Form {...form}>
 			<form
 				onSubmit={form.handleSubmit(onSubmit)}
-				className="w-full max-w-lg"
+				className="w-full max-w-2xl mt-24 relative z-[99999]"
 			>
 				<div className="flex flex-col sm:flex-row justify-between gap-1 items-center">
 					<FormField
 						control={form.control}
 						name="recipientName"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2">
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
 								<FormLabel>Recipient's Name</FormLabel>
 								<FormControl>
 									<Input placeholder="Manik Dingra" {...field} />
@@ -104,7 +104,7 @@ export default function InputForm() {
 						control={form.control}
 						name="recruiterName"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2">
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
 								<FormLabel>Recruiter's Name</FormLabel>
 								<FormControl>
 									<Input placeholder="Microsoft's Team" {...field} />
@@ -119,7 +119,7 @@ export default function InputForm() {
 						control={form.control}
 						name="to"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2">
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
 								<FormLabel>To</FormLabel>
 								<FormControl>
 									<Input
@@ -135,7 +135,7 @@ export default function InputForm() {
 						control={form.control}
 						name="from"
 						render={({ field }) => (
-							<FormItem className="w-full sm:w-1/2">
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
 								<FormLabel>From</FormLabel>
 								<FormControl>
 									<Input
@@ -148,45 +148,47 @@ export default function InputForm() {
 						)}
 					/>
 				</div>
-				<FormField
-					control={form.control}
-					name="password"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Password</FormLabel>
-							<FormControl>
-								<Input
-									type="password"
-									placeholder="xxx-xxx-xxx-xxx"
-									{...field}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+				<div className="flex flex-col sm:flex-row justify-between gap-1 items-center">
+					<FormField
+						control={form.control}
+						name="password"
+						render={({ field }) => (
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
+								<FormLabel>Password</FormLabel>
+								<FormControl>
+									<Input
+										type="password"
+										placeholder="xxx-xxx-xxx-xxx"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 
-				<FormField
-					control={form.control}
-					name="subject"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Subject</FormLabel>
-							<FormControl>
-								<Input
-									placeholder="Ex : Application for full stack developer role"
-									{...field}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+					<FormField
+						control={form.control}
+						name="subject"
+						render={({ field }) => (
+							<FormItem className="w-full sm:w-1/2 dark:text-white text-black">
+								<FormLabel>Subject</FormLabel>
+								<FormControl>
+									<Input
+										placeholder="Ex : Application for full stack developer role"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
 				<FormField
 					control={form.control}
 					name="file"
 					render={() => (
-						<FormItem>
+						<FormItem className="dark:text-white text-black">
 							<FormLabel>File</FormLabel>
 							<FormControl>
 								<Input type="file" {...fileRef} />
@@ -199,11 +201,11 @@ export default function InputForm() {
 					control={form.control}
 					name="content"
 					render={({ field }) => (
-						<FormItem>
+						<FormItem className="dark:text-white text-black">
 							<FormLabel>Content</FormLabel>
 							<FormControl>
 								<Textarea
-									rows={5}
+									rows={4}
 									placeholder="Your email content goes here"
 									{...field}
 								/>

@@ -15,13 +15,20 @@ export const Logo = () => {
 				height={36}
 			/>
 			<Image
-				src="/logo-dark.svg"
+				src="/logo.svg"
 				alt="logo dark"
 				className="hidden dark:block"
 				width={36}
 				height={36}
 			/>
-			<p className={cn("font-semibold", font.className)}>Mailer</p>
+			<p
+				className={cn(
+					"font-semibold text-[#1f2937] dark:text-white",
+					font.className
+				)}
+			>
+				EmailEase
+			</p>
 		</div>
 	);
 };

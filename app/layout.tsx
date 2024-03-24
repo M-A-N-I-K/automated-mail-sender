@@ -4,7 +4,6 @@ import { Toaster } from "sonner";
 import Head from "next/head";
 
 import { EdgeStoreProvider } from "@/lib/edgestore";
-import { Navbar } from "./_components/Navbar";
 import { ThemeProvider } from "../components/providers/theme-provider";
 import "./globals.css";
 
@@ -48,19 +47,18 @@ export default function RootLayout({
 				<meta property="og:site_name" content="Notion Clone" />
 			</Head>
 			<body className={inter.className}>
-				<Navbar />
-				<ThemeProvider
-					attribute="class"
-					defaultTheme="system"
-					enableSystem
-					disableTransitionOnChange
-					storageKey="notion-theme"
-				>
-					<EdgeStoreProvider>
-						{children}
+				<EdgeStoreProvider>
+					<ThemeProvider
+						attribute="class"
+						defaultTheme="system"
+						enableSystem
+						disableTransitionOnChange
+						storageKey="notion-theme"
+					>
 						<Toaster position="bottom-center" />
-					</EdgeStoreProvider>
-				</ThemeProvider>
+						{children}
+					</ThemeProvider>
+				</EdgeStoreProvider>
 			</body>
 		</html>
 	);
