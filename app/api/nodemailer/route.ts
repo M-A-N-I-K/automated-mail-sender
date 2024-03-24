@@ -30,6 +30,19 @@ export async function POST(req: NextRequest) {
 		},
 	});
 
+	await new Promise((resolve, reject) => {
+		// verify connection configuration
+		transporter.verify(function (error: any, success: any) {
+			if (error) {
+				console.log(error);
+				reject(error);
+			} else {
+				console.log("Server is ready to take our messages");
+				resolve(success);
+			}
+		});
+	});
+
 	const mailOptions = {
 		from: data.from,
 		to: data.to,
@@ -43,7 +56,7 @@ export async function POST(req: NextRequest) {
 		],
 	};
 
-	let info = [];
+	let result: any[] = [];
 
 	if (data.emailFile && data.emailFile.length > 0) {
 		for (
@@ -65,18 +78,38 @@ export async function POST(req: NextRequest) {
 					data.emailFile[currentIndex].Content.replace(/\n/g, "<br>")
 				);
 
-			try {
-				const res = await transporter.sendMail(mailOptions);
-				console.log("Email sent to", mailOptions.to, ":", res.response);
-				info.push(res);
-			} catch (error) {
-				console.error("Error sending email to", mailOptions.to, ":", error);
-				info.push(error);
-			}
+			await new Promise((resolve, reject) => {
+				transporter.sendMail(mailOptions, function (error: any, info: any) {
+					if (error) {
+						reject(error);
+						result.push(error);
+						console.log(error);
+					} else {
+						result.push(info);
+						console.log(
+							"Email sent to",
+							mailOptions.to,
+							":",
+							info.response
+						);
+						resolve(info);
+					}
+				});
+			});
 		}
 	} else {
-		info = await transporter.sendMail(mailOptions);
+		await new Promise((resolve, reject) => {
+			transporter.sendMail(mailOptions, function (error: any, info: any) {
+				if (error) {
+					reject(error);
+					console.log(error);
+				} else {
+					resolve(info);
+					result = info;
+				}
+			});
+		});
 	}
 
-	return NextResponse.json(info);
+	return NextResponse.json({ status: "success", data: result });
 }
