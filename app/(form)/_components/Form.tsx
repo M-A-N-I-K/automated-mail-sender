@@ -77,7 +77,7 @@ const formSchema = z.object({
 		})
 		.transform((value) => value?.item(0))
 		.optional(),
-	delay: z.number().min(0).max(1000).default(0).optional(),
+	delay: z.string().optional(),
 });
 
 interface InputFormProps {
@@ -100,7 +100,7 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 			to: "",
 			file: null,
 			emailFile: null,
-			delay: 0,
+			delay: "",
 		},
 	});
 
@@ -197,7 +197,7 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 			<Loader
 				loadingStates={loadingStates}
 				loading={loading}
-				duration={3000}
+				duration={2500}
 			/>
 			<form
 				onSubmit={form.handleSubmit(onSubmit)}
@@ -382,11 +382,7 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 							<FormItem className="dark:text-white text-black text-xl">
 								<FormLabel>Delay</FormLabel>
 								<FormControl>
-									<Input
-										type="number"
-										placeholder="Delay (in seconds)"
-										{...field}
-									/>
+									<Input placeholder="Delay (in seconds)" {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
