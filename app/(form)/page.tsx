@@ -16,7 +16,7 @@ const Hero = () => {
 					initial="hidden"
 					animate="enter"
 					transition={{ duration: 0.5, ease: "easeInOut" }}
-					className="text-3xl sm:text-5xl md:text-6xl text-[#1f2937] dark:text-white font-bold tracking-tight text-center"
+					className="text-4xl sm:text-5xl md:text-6xl text-[#1f2937] dark:text-white font-bold tracking-tight text-center"
 				>
 					Unleash Personalized Email Experiences, Tailored to You.
 				</MotionH1>

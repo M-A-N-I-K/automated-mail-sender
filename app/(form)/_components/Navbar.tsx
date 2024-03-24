@@ -1,11 +1,14 @@
 "use client";
-import useScrollTop from "@/hooks/use-scroll-top";
+import Link from "next/link";
+import { Mail } from "lucide-react";
+import Image from "next/image";
 
 import { ModeToggle } from "@/components/modeToggle";
-import { cn } from "@/lib/utils";
-import { Logo } from "./logo";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import useScrollTop from "@/hooks/use-scroll-top";
+import { cn } from "@/lib/utils";
+
+import { Logo } from "./logo";
 
 export const Navbar = () => {
 	const scrolled = useScrollTop();
@@ -19,10 +22,22 @@ export const Navbar = () => {
 			<Logo />
 			<div className="md:ml-auto md:justify-end justify-between w-full flex items-center gap-x-2">
 				<Link href="/single-email">
-					<Button size="lg">Send Single Mail</Button>
+					<Button className="hidden sm:block" size="lg">
+						Send Single Mail
+					</Button>
+					<Mail className="block sm:hidden" size={24} />
 				</Link>
 				<Link href="/multiple-email">
-					<Button size="lg">Send Multiple Mails</Button>
+					<Button className="hidden sm:block" size="lg">
+						Send Multiple Mails
+					</Button>
+					<Image
+						src="/multiple-mail.svg"
+						alt="Multiple Mail"
+						className="block font-bold sm:hidden"
+						width={32}
+						height={32}
+					/>
 				</Link>
 				<ModeToggle />
 			</div>

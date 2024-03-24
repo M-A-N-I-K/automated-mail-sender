@@ -201,7 +201,10 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 			/>
 			<form
 				onSubmit={form.handleSubmit(onSubmit)}
-				className="w-full max-w-2xl mt-[22rem] sm:mt-40 mb-4 relative z-10"
+				className={cn(
+					"w-full max-w-2xl mb-4 relative z-10",
+					multipleEmails ? "mt-32" : "sm:mt-24 mt-[20rem]"
+				)}
 			>
 				<div
 					className={cn(
@@ -377,7 +380,7 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 						name="delay"
 						render={({ field }) => (
 							<FormItem className="dark:text-white text-black text-xl">
-								<FormLabel>Content</FormLabel>
+								<FormLabel>Delay</FormLabel>
 								<FormControl>
 									<Input
 										type="number"
