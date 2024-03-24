@@ -5,7 +5,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 	return (
 		<AuroraBackground showRadialGradient className="overflow-scroll">
 			<Navbar />
-			<main className="w-full p-8 flex justify-center items-center">
+			<main className="w-full p-4 sm:p-20 lg:p-24 flex justify-center items-center">
 				{children}
 			</main>
 		</AuroraBackground>
