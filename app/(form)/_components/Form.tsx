@@ -19,6 +19,14 @@ import {
 
 import { useEdgeStore } from "@/lib/edgestore";
 
+const validExtensions = ["pdf", "doc", "docx"];
+
+const MAX_FILE_SIZE_MB = 5;
+
+const toMb = (bytes: number) => {
+	return bytes / 1024 / 1024;
+};
+
 const formSchema = z.object({
 	from: z.string().min(1, { message: "Email is required" }).email(),
 	to: z.string().min(1, { message: "Email is required" }).email(),
@@ -28,9 +36,42 @@ const formSchema = z.object({
 	recipientName: z.string().min(1, { message: "Recipient Name is required" }),
 	recruiterName: z.string().min(1, { message: "Recruiter Name is required" }),
 	file: z
-		.instanceof(FileList)
-		.refine((file) => file?.length == 1, "File is required."),
-	emailFile: z.instanceof(FileList).optional(),
+		.unknown()
+		.transform((value) => {
+			return value as FileList | null | undefined;
+		})
+		.transform((value) => value?.item(0))
+		.refine(
+			(file) => {
+				if (!file) {
+					return true;
+				}
+
+				const fileExtension = file.name.split(".").pop();
+
+				return !!fileExtension && validExtensions.includes(fileExtension);
+			},
+			{ message: `Valid types: ${validExtensions}` }
+		)
+		.refine(
+			(file) => {
+				if (!file) {
+					return true;
+				}
+
+				return toMb(file.size) <= MAX_FILE_SIZE_MB;
+			},
+			{
+				message: `File size must be less than ${MAX_FILE_SIZE_MB}MB`,
+			}
+		),
+	emailFile: z
+		.unknown()
+		.transform((value) => {
+			return value as FileList | null | undefined;
+		})
+		.transform((value) => value?.item(0))
+		.optional(),
 });
 
 interface InputFormProps {
@@ -59,15 +100,22 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		console.log(values);
 
-		const file = values.file[0];
-		const emailFile = values.emailFile?.[0];
+		const file = values.file;
+		const emailFile = values.emailFile;
 
 		console.log(file);
+
+		if (!file) {
+			toast.error("File is required");
+			return;
+		}
 
 		const res = await edgestore.publicFiles.upload({
 			file,
 		});
+
 		let emailRes;
+
 		if (emailFile) {
 			emailRes = await edgestore.publicFiles.upload({
 				file: emailFile,

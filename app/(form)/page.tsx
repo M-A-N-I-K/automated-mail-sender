@@ -1,4 +1,5 @@
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
+import Link from "next/link";
 
 const Hero = () => {
 	return (
@@ -10,7 +11,9 @@ const Hero = () => {
 				<p className="text-center text-xl text-muted-foreground">
 					EmailEase - Send emails with ease
 				</p>
-				<HoverBorderGradient>Start Now!</HoverBorderGradient>
+				<Link href="/single-email">
+					<HoverBorderGradient>Start Now!</HoverBorderGradient>
+				</Link>
 			</div>
 		</>
 	);
