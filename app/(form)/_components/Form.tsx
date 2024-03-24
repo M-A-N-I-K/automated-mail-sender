@@ -109,7 +109,7 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 						name="recipientName"
 						render={({ field }) => (
 							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
-								<FormLabel>Recipient's Name</FormLabel>
+								<FormLabel>Recipient&apos;s Name</FormLabel>
 								<FormControl>
 									<Input placeholder="Manik Dingra" {...field} />
 								</FormControl>
@@ -122,7 +122,7 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 						name="recruiterName"
 						render={({ field }) => (
 							<FormItem className="w-full sm:w-1/2 dark:text-white text-black text-xl">
-								<FormLabel>Recruiter's Name</FormLabel>
+								<FormLabel>Recruiter&apos;s Name</FormLabel>
 								<FormControl>
 									<Input placeholder="Microsoft's Team" {...field} />
 								</FormControl>
