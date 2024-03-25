@@ -34,13 +34,34 @@ const toMb = (bytes: number) => {
 
 const formSchema = z.object({
 	from: z.string().min(1, { message: "Email is required" }).email(),
-	to: z.string().email().optional(),
+	to: z
+		.string()
+		.optional()
+		.refine(
+			(value) => {
+				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+				return (
+					value === "" ||
+					value === null ||
+					value === undefined ||
+					emailRegex.test(value)
+				);
+			},
+			{
+				message: "To must be a valid email address",
+			}
+		),
 	password: z.string().min(1, { message: "Password is required" }),
 	subject: z.string().optional(),
 	content: z.string().optional(),
 	senderName: z.string().min(1, { message: "Sender Name is required" }),
 	recipientName: z.string().optional(),
-	delay: z.string().optional(),
+	delay: z
+		.string()
+		.optional()
+		.refine((value) => value === undefined || !isNaN(Number(value)), {
+			message: "Delay must be a valid number",
+		}),
 	file: z
 		.unknown()
 		.transform((value) => {
@@ -98,8 +119,9 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 			subject: "",
 			recipientName: "",
 			to: "",
-			file: null,
-			emailFile: null,
+			file: undefined,
+			emailFile: undefined,
+			delay: "",
 		},
 	});
 
@@ -107,6 +129,7 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 	const emailFileRef = form.register("emailFile");
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
+		console.log(values);
 		setLoading(true);
 
 		const file = values.file;
@@ -172,6 +195,10 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 			}),
 		});
 
+		if (response.ok) {
+			form.reset();
+		}
+
 		setLoading(false);
 
 		toast.promise(response.json(), {
@@ -179,8 +206,6 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 			success: "Email sent successfully!",
 			error: "Failed to send email!",
 		});
-
-		form.reset();
 	}
 
 	return (
@@ -366,21 +391,24 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 						)}
 					/>
 				) : (
-					<></>
+					<FormField
+						control={form.control}
+						name="delay"
+						render={({ field }) => (
+							<FormItem className="dark:text-white text-black text-xl">
+								<FormLabel>Delay</FormLabel>
+								<FormControl>
+									<Input
+										placeholder="Delay (in secdonds)"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 				)}
-				<FormField
-					control={form.control}
-					name="delay"
-					render={({ field }) => (
-						<FormItem className="dark:text-white text-black text-xl">
-							<FormLabel>Delay</FormLabel>
-							<FormControl>
-								<Input placeholder="Delay (in seconds)" {...field} />
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+
 				<Button className="mt-4 w-full" type="submit">
 					Submit
 				</Button>

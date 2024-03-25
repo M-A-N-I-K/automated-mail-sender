@@ -76,12 +76,13 @@ export async function POST(req: NextRequest) {
 	};
 
 	if (data.emailFile && data.emailFile.length > 0) {
+		console.log("Sending messages in bulk...");
 		for (
 			let currentIndex = 0;
 			currentIndex < data.emailFile.length;
 			currentIndex++
 		) {
-			await delay(60 * 1000);
+			await delay(Number(data.delay) * 1000);
 			mailOptions.to = data.emailFile[currentIndex].Email;
 			mailOptions.subject = data.emailFile[currentIndex].Subject;
 			mailOptions.html = htmlTemplate
