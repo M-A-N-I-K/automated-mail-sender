@@ -129,7 +129,6 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 	const emailFileRef = form.register("emailFile");
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values);
 		setLoading(true);
 
 		const file = values.file;

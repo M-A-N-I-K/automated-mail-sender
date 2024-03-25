@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
 					reject(error);
 				} else {
 					resolve(info);
+					console.log("Email sent: " + info.response);
 				}
 			});
 		});
