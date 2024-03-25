@@ -40,6 +40,7 @@ const formSchema = z.object({
 	content: z.string().optional(),
 	senderName: z.string().min(1, { message: "Sender Name is required" }),
 	recipientName: z.string().optional(),
+	delay: z.string().optional(),
 	file: z
 		.unknown()
 		.transform((value) => {
@@ -77,12 +78,6 @@ const formSchema = z.object({
 		})
 		.transform((value) => value?.item(0))
 		.optional(),
-	delay: z
-		.string()
-		.refine((val) => !Number.isNaN(parseInt(val, 10)), {
-			message: "Expected number, received a string",
-		})
-		.optional(),
 });
 
 interface InputFormProps {
@@ -105,7 +100,6 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 			to: "",
 			file: null,
 			emailFile: null,
-			delay: "",
 		},
 	});
 
@@ -115,82 +109,78 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		setLoading(true);
 
-		try {
-			const file = values.file;
-			const emailFile = values.emailFile;
+		const file = values.file;
+		const emailFile = values.emailFile;
 
-			if (!file) {
-				toast.error("File is required");
+		if (!file) {
+			toast.error("File is required");
+			return;
+		}
+
+		const validations = {
+			emailFile: {
+				condition: !emailFile && multipleEmails,
+				errorMessage: "Email file is required",
+			},
+			content: {
+				condition: !multipleEmails && !values.content,
+				errorMessage: "Content is required",
+			},
+			recipientName: {
+				condition: !multipleEmails && !values.recipientName,
+				errorMessage: "Recipient Name is required",
+			},
+			subject: {
+				condition: !multipleEmails && !values.subject,
+				errorMessage: "Subject is required",
+			},
+			to: {
+				condition: !multipleEmails && !values.to,
+				errorMessage: "To is required",
+			},
+		};
+
+		for (const [key, { condition, errorMessage }] of Object.entries(
+			validations
+		)) {
+			if (condition) {
+				setLoading(false);
+				toast.error(errorMessage);
 				return;
 			}
-
-			const validations = {
-				emailFile: {
-					condition: !emailFile && multipleEmails,
-					errorMessage: "Email file is required",
-				},
-				content: {
-					condition: !multipleEmails && !values.content,
-					errorMessage: "Content is required",
-				},
-				recipientName: {
-					condition: !multipleEmails && !values.recipientName,
-					errorMessage: "Recipient Name is required",
-				},
-				subject: {
-					condition: !multipleEmails && !values.subject,
-					errorMessage: "Subject is required",
-				},
-				to: {
-					condition: !multipleEmails && !values.to,
-					errorMessage: "To is required",
-				},
-			};
-
-			for (const [key, { condition, errorMessage }] of Object.entries(
-				validations
-			)) {
-				if (condition) {
-					toast.error(errorMessage);
-					return;
-				}
-			}
-
-			const res = await edgestore.publicFiles.upload({
-				file,
-			});
-
-			let emailRes;
-
-			if (emailFile) {
-				emailRes = await readCsv(emailFile);
-			}
-
-			const response = await fetch("/api/nodemailer", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					...values,
-					file: res.url,
-					emailFile: emailRes,
-				}),
-			});
-
-			toast.promise(response.json(), {
-				loading: "Sending email...",
-				success: "Email sent successfully!",
-				error: "Failed to send email!",
-			});
-
-			form.reset();
-		} catch (error) {
-			console.error("Error submitting form:", error);
-			toast.error("Failed to submit form");
-		} finally {
-			setLoading(false);
 		}
+
+		const res = await edgestore.publicFiles.upload({
+			file,
+		});
+
+		let emailRes;
+
+		if (emailFile) {
+			emailRes = await readCsv(emailFile);
+		}
+
+		const response = await fetch("/api/nodemailer", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				...values,
+				file: res.url,
+				emailFile: emailRes,
+			}),
+		});
+
+		setLoading(false);
+
+		toast.promise(response.json(), {
+			loading: "Sending email...",
+			success: "Email sent successfully!",
+			error: "Failed to send email!",
+		});
+
+		form.reset();
 	}
 
 	return (
@@ -376,20 +366,21 @@ export default function InputForm({ multipleEmails }: InputFormProps) {
 						)}
 					/>
 				) : (
-					<FormField
-						control={form.control}
-						name="delay"
-						render={({ field }) => (
-							<FormItem className="dark:text-white text-black text-xl">
-								<FormLabel>Delay</FormLabel>
-								<FormControl>
-									<Input placeholder="Delay (in seconds)" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+					<></>
 				)}
+				<FormField
+					control={form.control}
+					name="delay"
+					render={({ field }) => (
+						<FormItem className="dark:text-white text-black text-xl">
+							<FormLabel>Delay</FormLabel>
+							<FormControl>
+								<Input placeholder="Delay (in seconds)" {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
 				<Button className="mt-4 w-full" type="submit">
 					Submit
 				</Button>

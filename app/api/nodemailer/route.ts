@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
 			currentIndex < data.emailFile.length;
 			currentIndex++
 		) {
-			await delay(data.delay * 1000);
+			await delay(60 * 1000);
 			mailOptions.to = data.emailFile[currentIndex].Email;
 			mailOptions.subject = data.emailFile[currentIndex].Subject;
 			mailOptions.html = htmlTemplate
