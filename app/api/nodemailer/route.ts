@@ -98,9 +98,9 @@ export async function POST(req: NextRequest) {
 				sendMail(mailOptions);
 			}, (currentIndex + 1) * data.delay * 60000);
 		}
+		return NextResponse.json({ status: "success" });
 	} else {
 		await sendMail(mailOptions);
+		return NextResponse.json({ status: "success" });
 	}
-
-	return NextResponse.json({ status: "success" });
 }
