@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { delay } from "@/app/(form)/_utils/readCSV";
 
 const nodemailer = require("nodemailer");
 
@@ -83,7 +82,6 @@ export async function POST(req: NextRequest) {
 			currentIndex < data.emailFile.length;
 			currentIndex++
 		) {
-			await delay(Number(data.delay) * 1000);
 			mailOptions.to = data.emailFile[currentIndex].Email;
 			mailOptions.subject = data.emailFile[currentIndex].Subject;
 			mailOptions.html = htmlTemplate
@@ -96,8 +94,9 @@ export async function POST(req: NextRequest) {
 					"{{content}}",
 					data.emailFile[currentIndex].Content.replace(/\n/g, "<br>")
 				);
-
-			await sendMail(mailOptions);
+			setTimeout(() => {
+				sendMail(mailOptions);
+			}, (currentIndex + 1) * data.delay * 60000);
 		}
 	} else {
 		await sendMail(mailOptions);
