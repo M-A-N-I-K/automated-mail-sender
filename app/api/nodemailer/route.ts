@@ -82,6 +82,9 @@ export async function POST(req: NextRequest) {
 			currentIndex < data.emailFile.length;
 			currentIndex++
 		) {
+			console.log(
+				"Sending message to: " + data.emailFile[currentIndex].Email
+			);
 			mailOptions.to = data.emailFile[currentIndex].Email;
 			mailOptions.subject = data.emailFile[currentIndex].Subject;
 			mailOptions.html = htmlTemplate
