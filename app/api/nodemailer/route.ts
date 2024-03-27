@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { delay } from "@/lib/utils";
 
 const nodemailer = require("nodemailer");
 
@@ -97,9 +98,8 @@ export async function POST(req: NextRequest) {
 					"{{content}}",
 					data.emailFile[currentIndex].Content.replace(/\n/g, "<br>")
 				);
-			setTimeout(() => {
-				sendMail(mailOptions);
-			}, (currentIndex + 1) * data.delay * 60000);
+			await delay((currentIndex + 1) * data.delay * 60000);
+			await sendMail(mailOptions);
 		}
 		return NextResponse.json({ status: "success" });
 	} else {
